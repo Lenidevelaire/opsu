@@ -35,6 +35,10 @@ import itdelatrisu.opsu.ui.animations.AnimatedValue;
 import itdelatrisu.opsu.ui.animations.AnimationEquation;
 
 import java.io.File;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import org.newdawn.slick.Color;
 import org.newdawn.slick.GameContainer;
@@ -59,8 +63,8 @@ public class Splash extends BasicGameState {
 	/** Whether or not loading has completed. */
 	private boolean finished = false;
 
-	/** Loading thread. */
-	private Thread thread;
+	/** Executor service for multi-threaded loading */
+	private ExecutorService workers;
 
 	/** Number of times the 'Esc' key has been pressed. */
 	private int escapeCount = 0;
@@ -93,6 +97,7 @@ public class Splash extends BasicGameState {
 	public void init(GameContainer container, StateBasedGame game)
 			throws SlickException {
 		this.container = container;
+		this.workers = Executors.newCachedThreadPool();
 
 		// check if skin changed
 		if (Options.getSkin() != null)
@@ -125,59 +130,139 @@ public class Splash extends BasicGameState {
 			// resources already loaded (from application restart)
 			if (BeatmapSetList.get() != null) {
 				if (newSkin || watchServiceChange) {  // need to reload resources
-					thread = new Thread() {
-						@Override
-						public void run() {
-							// reload beatmaps if watch service newly enabled
-							if (watchServiceChange)
-								BeatmapParser.parseAllFiles(Options.getBeatmapDir());
+					if (workers != null) {
+						final Future<?> parseMaps = workers.submit(new Runnable() {
+							@Override
+							public void run() {
+								if (watchServiceChange)
+									BeatmapParser.parseAllFiles(Options.getBeatmapDir());
+							}
+						});
 
-							// reload sounds if skin changed
-							// TODO: only reload each sound if actually needed?
-							if (newSkin)
-								SoundController.init();
+						final Future<?> soundLoading = workers.submit(new Runnable() {
+							@Override
+							public void run() {
+								if (newSkin)
+									SoundController.init();
+							}
+						});
 
-							Utils.gc(true);
+						workers.submit(new Runnable() {
+							@Override
+							public void run() {
+								while (true) {
+									try {
+										if (soundLoading.get() == null && parseMaps.get() == null) {
+											Utils.gc(true);
+											finished = true;
+											break;
+										}
+									} catch (InterruptedException | ExecutionException e) {
+										throw new RuntimeException("Could not load system", e);
+									}
+								}
+							}
+						});
+					} else {
+						workers.execute(new Runnable() {
+							@Override
+							public void run() {
+								// reload beatmaps if watch service newly enabled
+								if (watchServiceChange)
+									BeatmapParser.parseAllFiles(Options.getBeatmapDir());
 
-							finished = true;
-							thread = null;
-						}
-					};
-					thread.start();
+								// reload sounds if skin changed
+								// TODO: only reload each sound if actually needed?
+								if (newSkin)
+									SoundController.init();
+
+								Utils.gc(true);
+
+								finished = true;
+							}
+						});
+					}
 				} else  // don't reload anything
 					finished = true;
 			}
 
 			// load all resources in a new thread
 			else {
-				thread = new Thread() {
-					@Override
-					public void run() {
-						File beatmapDir = Options.getBeatmapDir();
-						File importDir = Options.getImportDir();
+				final File beatmapDir = Options.getBeatmapDir();
+				final File importDir = Options.getImportDir();
 
-						// unpack all OSZ archives
-						OszUnpacker.unpackAllFiles(importDir, beatmapDir);
+				if (Options.isMultithreadedLoading()) {
+					final Future<?> parseMaps = workers.submit(new Runnable() {
+						@Override
+						public void run() {
+							OszUnpacker.unpackAllFiles(importDir, beatmapDir);
+							BeatmapParser.parseAllFiles(beatmapDir);
+						}
+					});
 
-						// parse song directory
-						BeatmapParser.parseAllFiles(beatmapDir);
+					final Future<?> updateSkins = workers.submit(new Runnable() {
+						@Override
+						public void run() {
+							SkinUnpacker.unpackAllFiles(importDir, Options.getSkinRootDir());
+						}
+					});
 
-						// import skins
-						SkinUnpacker.unpackAllFiles(importDir, Options.getSkinRootDir());
+					final Future<?> parseReplays = workers.submit(new Runnable() {
+						@Override
+						public void run() {
+							ReplayImporter.importAllReplaysFromDir(importDir);
+						}
+					});
 
-						// import replays
-						ReplayImporter.importAllReplaysFromDir(importDir);
+					final Future<?> soundLoading = workers.submit(new Runnable() {
+						@Override
+						public void run() {
+							SoundController.init();
+						}
+					});
 
-						// load sounds
-						SoundController.init();
+					workers.submit(new Runnable() {
+						@Override
+						public void run() {
+							while (true) {
+								try {
+									if (parseMaps.get() == null && updateSkins.get() == null
+											&& parseReplays.get() == null && soundLoading.get() == null) {
+										Utils.gc(true);
+										finished = true;
+										break;
+									}
+								} catch (InterruptedException | ExecutionException e) {
+									throw new RuntimeException("Could not load system", e);
+								}
+							}
+						}
+					});
+				} else {
+					workers.execute(new Runnable() {
+						@Override
+						public void run() {
+							// unpack all OSZ archives
+							OszUnpacker.unpackAllFiles(importDir, beatmapDir);
 
-						Utils.gc(true);
+							// parse song directory
+							BeatmapParser.parseAllFiles(beatmapDir);
 
-						finished = true;
-						thread = null;
-					}
-				};
-				thread.start();
+							// import skins
+							SkinUnpacker.unpackAllFiles(importDir, Options.getSkinRootDir());
+
+							// import replays
+							ReplayImporter.importAllReplaysFromDir(importDir);
+
+							// load sounds
+							SoundController.init();
+
+							Utils.gc(true);
+
+							finished = true;
+						}
+					});
+				}
 			}
 		}
 
@@ -192,6 +277,9 @@ public class Splash extends BasicGameState {
 
 		// change states when loading complete
 		if (finished && logoAlpha.isFinished()) {
+			workers.shutdown();
+			workers = null;
+
 			// initialize song list
 			if (BeatmapSetList.get().size() > 0) {
 				BeatmapSetList.get().init();
@@ -219,9 +307,10 @@ public class Splash extends BasicGameState {
 			if (++escapeCount >= 3)
 				container.exit();
 
-			// stop parsing beatmaps by sending interrupt to BeatmapParser
-			else if (thread != null)
-				thread.interrupt();
+			// cancel loading on first signal
+			else if (workers != null) 
+				workers.shutdownNow();
+
 		}
 	}
 }
