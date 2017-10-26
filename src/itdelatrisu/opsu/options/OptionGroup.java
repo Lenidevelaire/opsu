@@ -115,6 +115,7 @@ public class OptionGroup {
 		new OptionGroup("MISCELLANEOUS", new GameOption[] {
 			GameOption.ENABLE_WATCH_SERVICE,
 			GameOption.LOAD_VERBOSE,
+			GameOption.MULTITHREAD_LOADING,
 		}),
 	};
 

@@ -649,7 +649,8 @@ public class Options {
 		ENABLE_WATCH_SERVICE ("Watch service", "WatchService", "Watch the beatmap directory for changes. Requires a restart.", false) {
 			@Override
 			public boolean isRestartRequired() { return true; }
-		};
+		},
+		MULTITHREAD_LOADING ("Multi-threaded loading", "MultiThreadLoading", "Use multi-threading during loading.\nMay reduce loading times in multi-core systems with fast disk access times.", false);
 
 		/** Option name. */
 		private final String name;
@@ -1271,6 +1272,12 @@ public class Options {
 	 * @return true if enabled
 	 */
 	public static boolean isWatchServiceEnabled() { return GameOption.ENABLE_WATCH_SERVICE.getBooleanValue(); }
+
+	/**
+	 * Returns whether or not multi-threaded loading is enabled.
+	 * @return true if enabled
+	 */
+	public static boolean isMultithreadedLoading() { return GameOption.MULTITHREAD_LOADING.getBooleanValue(); }
 
 	/**
 	 * Sets the track checkpoint time, if within bounds.
