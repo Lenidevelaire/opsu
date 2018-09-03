@@ -224,7 +224,9 @@ public class ErrorHandler {
 		sb.append(")\n");
 		sb.append("**JRE:** ");
 		sb.append(System.getProperty("java.version"));
-		sb.append('\n');
+		sb.append(" (");
+		sb.append(System.getProperty("java.vendor"));
+		sb.append(")\n");
 		if (glString != null) {
 			sb.append("**OpenGL version:** ");
 			sb.append(glString);
