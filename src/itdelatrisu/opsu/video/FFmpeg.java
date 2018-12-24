@@ -18,6 +18,7 @@
 
 package itdelatrisu.opsu.video;
 
+import itdelatrisu.opsu.Utils;
 import itdelatrisu.opsu.options.Options;
 
 import java.io.BufferedReader;
@@ -90,8 +91,11 @@ public class FFmpeg {
 	 * @param srcMovieFile the source video file
 	 */
 	public static VideoMetadata extractMetadata(File srcMovieFile) throws IOException {
+		File ffmpegFile = getNativeLocation();
+		Utils.setExecutable(ffmpegFile);
+
 		Process process = new ProcessBuilder().command(
-			getNativeLocation().getAbsolutePath(),
+			ffmpegFile.getAbsolutePath(),
 			"-i", srcMovieFile.getAbsolutePath(),
 			"-f", "null"
 		).start();
@@ -108,7 +112,15 @@ public class FFmpeg {
 				// "	Stream #0:0: Video: vp6f, yuv420p, 320x240, 314 kb/s, 30 tbr, 1k tbn, 1k tbc"
 				// ----------------------------------------------------------^
 				if (line.trim().startsWith("Stream #") && line.contains("Video:")) {
-					framerate = Float.parseFloat(RegexUtil.findFirst(line, Pattern.compile("\\s(\\d+(\\.\\d+)?)\\stbr,"), 1));
+					// Parse framerate
+					// Note: Can contain 'k' suffix (*1000), see dump.c#print_fps.
+					// https://www.ffmpeg.org/doxygen/3.1/dump_8c_source.html#l00119
+					String[] fr = RegexUtil.find(line, Pattern.compile("\\s(\\d+(\\.\\d+)?)(k?)\\stbr,"), 1, 3);
+					framerate = Float.parseFloat(fr[0]);
+					if (!fr[1].isEmpty())
+						framerate *= 1000f;
+
+					// Parse width/height
 					int[] wh = TextValues.parseInts(RegexUtil.find(line, Pattern.compile("\\s(\\d+)x(\\d+)[\\s,]"), 1, 2));
 					width = wh[0];
 					height = wh[1];
@@ -130,8 +142,11 @@ public class FFmpeg {
 	 * @param msec the time offset (in milliseconds)
 	 */
 	public static InputStream extractVideoAsRGB24(File srcMovieFile, int msec) throws IOException {
+		File ffmpegFile = getNativeLocation();
+		Utils.setExecutable(ffmpegFile);
+
 		return streamData(new ProcessBuilder().command(
-			getNativeLocation().getAbsolutePath(),
+			ffmpegFile.getAbsolutePath(),
 			"-ss", String.format("%d.%d", msec / 1000, msec % 1000),
 			"-i", srcMovieFile.getAbsolutePath(),
 			"-f", "rawvideo",
