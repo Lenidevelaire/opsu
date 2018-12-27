@@ -45,7 +45,8 @@ public class BeatmapSetList {
 
 	/** Search pattern for conditional expressions. */
 	private static final Pattern SEARCH_CONDITION_PATTERN = Pattern.compile(
-		"(ar|cs|od|hp|bpm|length|stars?)(==?|>=?|<=?)((\\d*\\.)?\\d+)"
+		"(ar|cs|od|hp|bpm|length|stars?)(==?|>=?|<=?)((?:\\d*\\.)?\\d+)(?:\\s*)(\\|\\||\\&\\&)?",
+		Pattern.CASE_INSENSITIVE
 	);
 
 	/** List containing all parsed nodes. */
