@@ -477,6 +477,7 @@ public class BeatmapSetList {
 		LinkedList<String> condType     = new LinkedList<String>();
 		LinkedList<String> condOperator = new LinkedList<String>();
 		LinkedList<Float>  condValue    = new LinkedList<Float>();
+		LinkedList<String> condExtends	= new LinkedList<String>();
 
 		Iterator<String> termIter = terms.iterator();
 		while (termIter.hasNext()) {
@@ -486,6 +487,11 @@ public class BeatmapSetList {
 				condType.add(m.group(1));
 				condOperator.add(m.group(2));
 				condValue.add(Float.parseFloat(m.group(3)));
+				
+				String additional = m.group(4);
+				if (additional != null && !additional.isEmpty())
+					condExtends.add(additional);
+
 				termIter.remove();
 			}
 		}
@@ -497,6 +503,8 @@ public class BeatmapSetList {
 			String type = condType.remove();
 			String operator = condOperator.remove();
 			float value = condValue.remove();
+			
+			// TODO add the additional operators AND OR
 			for (BeatmapSetNode node : groupNodes) {
 				if (node.getBeatmapSet().matches(type, operator, value))
 					nodes.add(node);
