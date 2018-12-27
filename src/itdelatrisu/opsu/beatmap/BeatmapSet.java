@@ -35,31 +35,33 @@ public class BeatmapSet implements Iterable<Beatmap> {
 	private final ArrayList<Beatmap> beatmaps;
 
 	/** Search filter */
-	private ArrayList<Beatmap> filteredBeatmaps = new ArrayList<>();
+	private final ArrayList<Beatmap> filteredBeatmaps;
+
 	/**
 	 * Constructor.
 	 * @param beatmaps the beatmaps in this set
 	 */
 	public BeatmapSet(ArrayList<Beatmap> beatmaps) {
 		this.beatmaps = beatmaps;
+		this.filteredBeatmaps = new ArrayList<>();
 	}
 
 	/**
 	 * Returns the number of search results or total number.
 	 */
-	public int size() { return filteredBeatmaps.size() > 0 ? filteredBeatmaps.size() : beatmaps.size(); }
+	public int size() { return !filteredBeatmaps.isEmpty() ? filteredBeatmaps.size() : beatmaps.size(); }
 
 	/**
 	 * Returns the true number of elements
 	 */
-	public int trueSize(){return beatmaps.size(); }
+	public int trueSize() { return beatmaps.size(); }
 
 	/**
 	 * Returns the beatmap at the given index.
 	 * @param index the beatmap index
 	 * @throws IndexOutOfBoundsException if the index is out of range
 	 */
-	public Beatmap get(int index) { return filteredBeatmaps.size() > 0 ? filteredBeatmaps.get(index) : beatmaps.get(index); }
+	public Beatmap get(int index) { return !filteredBeatmaps.isEmpty() ? filteredBeatmaps.get(index) : beatmaps.get(index); }
 
 	/**
 	 * Removes the beatmap at the given index.
@@ -68,10 +70,10 @@ public class BeatmapSet implements Iterable<Beatmap> {
 	 * @throws IndexOutOfBoundsException if the index is out of range
 	 */
 	public Beatmap remove(int index) {
-		if(filteredBeatmaps.size() > 0){
-			beatmaps.remove(this.get(index));
-			return filteredBeatmaps.remove(index);
-		}
+		if (!filteredBeatmaps.isEmpty()) 
+			// TODO [!] Beatmap's index is not always == to Filter's index
+			filteredBeatmaps.remove(filteredBeatmaps.get(index));
+
 		return beatmaps.remove(index);
 	}
 
@@ -91,7 +93,7 @@ public class BeatmapSet implements Iterable<Beatmap> {
 	 * @throws IndexOutOfBoundsException if the index is out of range
 	 */
 	public String[] getInfo(int index) {
-		Beatmap beatmap = this.get(index);
+		Beatmap beatmap = get(index);
 		float speedModifier = GameMod.getSpeedMultiplier();
 		long endTime = (long) (beatmap.endTime / speedModifier);
 		int bpmMin = (int) (beatmap.bpmMin * speedModifier);
@@ -132,8 +134,7 @@ public class BeatmapSet implements Iterable<Beatmap> {
 	/**
 	 * Clears the search array so we correctly reset the set after changing a filter
 	 */
-	public void clearFilter(){
-		filteredBeatmaps.clear();}
+	public void clearFilter() { filteredBeatmaps.clear(); }
 
 	/**
 	 * Checks whether the beatmap set matches a given search query.
@@ -142,7 +143,6 @@ public class BeatmapSet implements Iterable<Beatmap> {
 	 */
 	public boolean matches(String query) {
 		// search: title, artist, creator, source, version, tags (first beatmap)
-		filteredBeatmaps.clear();
 		Beatmap beatmap = beatmaps.get(0);
 		if (beatmap.title.toLowerCase().contains(query) ||
 			beatmap.titleUnicode.toLowerCase().contains(query) ||
@@ -173,7 +173,6 @@ public class BeatmapSet implements Iterable<Beatmap> {
 	 * @return true if the condition is met
 	 */
 	public boolean matches(String type, String operator, float value) {
-		filteredBeatmaps.clear();
 		boolean found = false;
 		for (Beatmap beatmap : beatmaps) {
 			// get value
@@ -202,7 +201,7 @@ public class BeatmapSet implements Iterable<Beatmap> {
 				default: return false;
 			}
 
-			if (met){
+			if (met) {
 				filteredBeatmaps.add(beatmap);
 				found = true;
 			}
