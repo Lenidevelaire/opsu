@@ -1961,6 +1961,8 @@ public class SongMenu extends BasicGameState {
 	private void calculateStarRatings(BeatmapSet beatmapSet) {
 		for (Beatmap beatmap : beatmapSet) {
 			if (beatmap.starRating >= 0) {  // already calculated
+				if (beatmap.starRatingCalculator == null)
+					beatmap.starRatingCalculator = new BeatmapDifficultyCalculator(beatmap);
 				beatmapsCalculated.put(beatmap, beatmapsCalculated.get(beatmap));
 				continue;
 			}
@@ -1969,13 +1971,8 @@ public class SongMenu extends BasicGameState {
 			// don't clear the array fields to be safe
 			boolean hasTimingPoints = (beatmap.timingPoints != null);
 
-			BeatmapDifficultyCalculator diffCalc = new BeatmapDifficultyCalculator(beatmap);
-			diffCalc.calculate();
-			if (diffCalc.getStarRating() == -1)
-				continue;  // calculations failed
-
-			// save star rating
-			beatmap.starRating = diffCalc.getStarRating();
+			// save star rating calculator
+			beatmap.starRatingCalculator = new BeatmapDifficultyCalculator(beatmap);
 			BeatmapDB.setStars(beatmap);
 			beatmapsCalculated.put(beatmap, !hasTimingPoints);
 		}
