@@ -8,7 +8,9 @@ This fork aims to create a system where most binaries can be built from a single
 Also, this fork has distinct branches to make code flow cleaner across releases:
 
 * [`master`](https://github.com/Lenidevelaire/opsu-variant/tree/master), is the main branch and contains the release-ready code which is mostly tested and ready for deployment.
-* [`next`](https://github.com/Lenidevelaire/opsu-variant/tree/next), contains experimental features and new code which may be broken.
+* Version branches (`v/#.#.#`) are version-specific branches which may or may not work.
+* Feature branches (`f/<feature-name>`) contains experimental features which may be broken or not work as intended.
+* Fix branches (`b/issue-#`) contain non-finalized fixes relating to a specific issue.
 * [`gh-pages`](https://github.com/Lenidevelaire/opsu-variant/tree/gh-pages), contains the webpage design for this repository.
 
 ## Downloads
@@ -29,7 +31,7 @@ Gradle builds are built to the `build` directory.
 opsu! was made by Jeffrey Han ([@itdelatrisu](https://github.com/itdelatrisu/)).  All game concepts and designs are based on work by [osu!](https://osu.ppy.sh/) developer Dean Herbert
 ([@ppy](https://github.com/ppy)).  Other opsu! credits can be found [here](CREDITS.md).
 
-opsu!variant (and everything within the package `lc.lenidevelaire.opsu_variant`) were made by the [Lenidevelaire team](https://github.com/Lenidevelaire), which may contain modified opsu! sources.
+opsu!variant (everything within the package `lc.lenidevelaire.aria`) were made by the [Lenidevelaire team](https://github.com/Lenidevelaire), which may contain modified opsu! sources.
 
 ## License
 **This software is licensed under GNU GPL version 3.**
