@@ -1,7 +1,9 @@
 Credits
 =======
 
-This software was created by Jeffrey Han ([@itdelatrisu](https://github.com/itdelatrisu/)).
+This software was originally created by Jeffrey Han ([@itdelatrisu](https://github.com/itdelatrisu/)).
+
+The package `lc.lenidevelaire.opsu_variant` and its contents were made by the [Lenidevelaire team](https://github.com/Lenidevelaire), which may contain modified opsu! sources.
 
 All game concepts and designs are based on work by [osu!](https://osu.ppy.sh/)
 developer Dean Herbert ([@ppy](https://github.com/ppy)).

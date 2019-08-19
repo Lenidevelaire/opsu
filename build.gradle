@@ -6,7 +6,7 @@ apply plugin: 'application'
 
 import org.apache.tools.ant.filters.*
 
-group = 'itdelatrisu'
+group = 'lc.lenidevelaire'
 version = '0.16.1'
 
 mainClassName = 'itdelatrisu.opsu.Opsu'
@@ -22,8 +22,7 @@ if (hasProperty('excludeFFmpeg')) {
 	excludeFFmpeg = true
 }
 
-sourceCompatibility = 1.7
-targetCompatibility = 1.7
+sourceCompatibility = targetCompatibility = 1.8
 
 sourceSets {
 	main {
@@ -55,12 +54,12 @@ dependencies {
 		exclude group: 'com.googlecode.soundlibs', module: 'tritonus-share'
 	}
 	compile 'com.googlecode.soundlibs:tritonus-all:0.3.7.2'
-	compile 'org.xerial:sqlite-jdbc:3.15.1'
-	compile 'org.json:json:20160810'
-	compile 'net.java.dev.jna:jna:4.2.2'
-	compile 'net.java.dev.jna:jna-platform:4.2.2'
-	compile 'org.apache.maven:maven-artifact:3.3.3'
-	compile 'org.tukaani:xz:1.6'
+	compile 'org.xerial:sqlite-jdbc:3.25.2'
+	compile 'org.json:json:20180813'
+	compile 'net.java.dev.jna:jna:4.5.2'
+	compile 'net.java.dev.jna:jna-platform:4.5.2'
+	compile 'org.apache.maven:maven-artifact:3.6.0'
+	compile 'org.tukaani:xz:1.8'
 	compile 'net.indiespot:media:0.8.9'
 	compile 'com.github.francesco149:koohii:1.0.15'
 }
@@ -100,14 +99,14 @@ task unpackNatives {
 
 jar {
 	manifest {
-		attributes 'Implementation-Title': 'opsu!',
+		attributes 'Implementation-Title': 'opsu!variant',
 				'Implementation-Version': version,
 				'Main-Class': mainClassName,
 				'Use-XDG': useXDG
 	}
 
 	duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-	baseName = "opsu"
+	baseName = "opsu-variant"
 
 	from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
 	exclude '**/Thumbs.db'
