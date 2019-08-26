@@ -227,8 +227,8 @@ public class HitObject {
 				this.sliderX[j - 1] = Integer.parseInt(sliderXY[0]);
 				this.sliderY[j - 1] = Integer.parseInt(sliderXY[1]);
 			}
-			this.repeat = Integer.parseInt(tokens[6]);
-			this.pixelLength = Float.parseFloat(tokens[7]);
+			this.repeat = Math.max(0, Integer.parseInt(tokens[6]));
+			this.pixelLength = Math.max(0, Float.parseFloat(tokens[7]));
 			if (tokens.length > 8) {
 				String[] edgeHitSoundTokens = tokens[8].split("\\|");
 				this.edgeHitSound = new short[edgeHitSoundTokens.length];
@@ -251,7 +251,7 @@ public class HitObject {
 			int index = tokens[5].indexOf(':');
 			if (index != -1)
 				tokens[5] = tokens[5].substring(0, index);
-			this.endTime = Integer.parseInt(tokens[5]);
+			this.endTime = Math.max(0, Integer.parseInt(tokens[5]));
 		}
 
 		// addition
