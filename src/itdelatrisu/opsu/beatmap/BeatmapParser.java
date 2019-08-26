@@ -333,7 +333,9 @@ public class BeatmapParser {
 								beatmap.sampleSet = getDBString(tokens[1]);
 								break;
 							case "StackLeniency":
-								beatmap.stackLeniency = Float.parseFloat(tokens[1]);
+								float stackLen = Float.parseFloat(tokens[1]);
+								if (!Float.isNaN(stackLen))
+									beatmap.stackLeniency = stackLen;
 								break;
 							case "Mode":
 								beatmap.mode = Byte.parseByte(tokens[1]);
