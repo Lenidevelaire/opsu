@@ -318,7 +318,10 @@ public class BeatmapParser {
 								beatmap.audioFilename = audioFileName;
 								break;
 							case "AudioLeadIn":
-								beatmap.audioLeadIn = Integer.parseInt(tokens[1]);
+								int leadIn = Integer.parseInt(tokens[1]);
+								if (leadIn >= 360000) // 1 hour lead-in is unlikely, set to zero
+									leadIn = 0;
+								beatmap.audioLeadIn = leadIn;
 								break;
 //							case "AudioHash":  // deprecated
 //								beatmap.audioHash = tokens[1];
