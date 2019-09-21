@@ -217,7 +217,7 @@ public class Beatmap implements Comparable<Beatmap> {
 	public ArrayList<TimingPoint> timingPoints;
 
 	/** Song BPM range. */
-	public int bpmMin = 0, bpmMax = 0;
+	public float bpmMin = 0, bpmMax = 0;
 
 	/**
 	 * [Colours]

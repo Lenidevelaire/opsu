@@ -553,7 +553,7 @@ public class BeatmapParser {
 
 							// calculate BPM
 							if (!timingPoint.isInherited()) {
-								int bpm = Math.round(60000 / timingPoint.getBeatLength());
+								float bpm = 60000f / timingPoint.getBeatLength();
 								if (beatmap.bpmMin == 0) {
 									beatmap.bpmMin = beatmap.bpmMax = bpm;
 								} else if (bpm < beatmap.bpmMin) {

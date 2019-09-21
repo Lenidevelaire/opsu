@@ -45,7 +45,7 @@ public class BeatmapDB {
 	 * This value should be changed whenever the database format changes.
 	 * Add any update queries to the {@link #getUpdateQueries(int)} method.
 	 */
-	private static final int DATABASE_VERSION = 20170221;
+	private static final int DATABASE_VERSION = 20190922;
 
 	/**
 	 * Returns a list of SQL queries to apply, in order, to update from
@@ -73,6 +73,12 @@ public class BeatmapDB {
 		}
 		if (version < 20170221) {
 			list.add("UPDATE beatmaps SET stars = -1");
+		}
+		if (version < 20190826) {
+			// ALTER COLUMN is omitted in SQLite, this is a workaround
+			list.add("ALTER TABLE beatmaps ADD COLUMN realBPMMin REAL");
+			list.add("ALTER TABLE beatmaps ADD COLUMN realBPMMax REAL");
+			list.add("UPDATE beatmaps SET realBPMMin = 0, realBPMMax = 0");
 		}
 
 		/* add future updates here */
@@ -152,7 +158,7 @@ public class BeatmapDB {
 			"INSERT INTO beatmaps VALUES (" +
 				"?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?," +
 				"?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?," +
-				"?, ?, ?, ?, ?, ?, ?, ?, ?" +
+				"?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?" +
 			")"
 		);
 		selectStmt = connection.prepareStatement("SELECT * FROM beatmaps WHERE dir = ? AND file = ?");
@@ -183,7 +189,7 @@ public class BeatmapDB {
 					"bg TEXT, sliderBorder TEXT, timingPoints TEXT, breaks TEXT, combo TEXT, " +
 					"md5hash TEXT, stars REAL, " +
 					"dateAdded INTEGER, favorite BOOLEAN, playCount INTEGER, lastPlayed INTEGER, localOffset INTEGER, " +
-					"video TEXT, videoOffset INTEGER" +
+					"video TEXT, videoOffset INTEGER, realBPMMin REAL, realBPMMax REAL" +
 				"); " +
 				"CREATE TABLE IF NOT EXISTS info (" +
 					"key TEXT NOT NULL UNIQUE, value TEXT" +
@@ -410,8 +416,8 @@ public class BeatmapDB {
 			stmt.setFloat(20, beatmap.approachRate);
 			stmt.setFloat(21, beatmap.sliderMultiplier);
 			stmt.setFloat(22, beatmap.sliderTickRate);
-			stmt.setInt(23, beatmap.bpmMin);
-			stmt.setInt(24, beatmap.bpmMax);
+			stmt.setInt(23, (int) beatmap.bpmMin);
+			stmt.setInt(24, (int) beatmap.bpmMax);
 			stmt.setInt(25, beatmap.endTime);
 			stmt.setString(26, beatmap.audioFilename.getName());
 			stmt.setInt(27, beatmap.audioLeadIn);
@@ -437,6 +443,8 @@ public class BeatmapDB {
 			stmt.setInt(47, beatmap.localMusicOffset);
 			stmt.setString(48, (beatmap.video == null) ? null : beatmap.video.getName());
 			stmt.setInt(49, beatmap.videoOffset);
+			stmt.setFloat(50, beatmap.bpmMin);
+			stmt.setFloat(51, beatmap.bpmMax);
 		} catch (SQLException e) {
 			throw e;
 		} catch (Exception e) {
@@ -561,8 +569,6 @@ public class BeatmapDB {
 			beatmap.approachRate = rs.getFloat(20);
 			beatmap.sliderMultiplier = rs.getFloat(21);
 			beatmap.sliderTickRate = rs.getFloat(22);
-			beatmap.bpmMin = rs.getInt(23);
-			beatmap.bpmMax = rs.getInt(24);
 			beatmap.endTime = rs.getInt(25);
 			beatmap.audioFilename = new File(dir, BeatmapParser.getDBString(rs.getString(26)));
 			beatmap.audioLeadIn = rs.getInt(27);
@@ -589,6 +595,12 @@ public class BeatmapDB {
 			if (video != null)
 				beatmap.video = new File(dir, BeatmapParser.getDBString(video));
 			beatmap.videoOffset = rs.getInt(49);
+			beatmap.bpmMin = rs.getFloat(50);
+			if (beatmap.bpmMin == 0)
+				beatmap.bpmMin = rs.getInt(23);
+			beatmap.bpmMax = rs.getFloat(51);
+			if (beatmap.bpmMax == 0)
+				beatmap.bpmMax = rs.getInt(24);
 		} catch (SQLException e) {
 			throw e;
 		} catch (Exception e) {

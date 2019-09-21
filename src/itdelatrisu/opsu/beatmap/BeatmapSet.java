@@ -81,8 +81,8 @@ public class BeatmapSet implements Iterable<Beatmap> {
 		Beatmap beatmap = beatmaps.get(index);
 		float speedModifier = GameMod.getSpeedMultiplier();
 		long endTime = (long) (beatmap.endTime / speedModifier);
-		int bpmMin = (int) (beatmap.bpmMin * speedModifier);
-		int bpmMax = (int) (beatmap.bpmMax * speedModifier);
+		float bpmMin = beatmap.bpmMin * speedModifier;
+		float bpmMax = beatmap.bpmMax * speedModifier;
 		float multiplier = GameMod.getDifficultyMultiplier();
 		NumberFormat nf = new DecimalFormat("##.#");
 		String[] info = new String[5];
@@ -93,7 +93,8 @@ public class BeatmapSet implements Iterable<Beatmap> {
 				TimeUnit.MILLISECONDS.toMinutes(endTime),
 				TimeUnit.MILLISECONDS.toSeconds(endTime) -
 				TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(endTime)),
-				(bpmMax <= 0) ? "--" : ((bpmMin == bpmMax) ? bpmMin : String.format("%d-%d", bpmMin, bpmMax)),
+				(bpmMax <= 0) ? "--" : ((bpmMin == bpmMax) ? bpmMin : 
+					String.format("%.1f-%.1f", bpmMin, bpmMax)),
 				(beatmap.hitObjectCircle + beatmap.hitObjectSlider + beatmap.hitObjectSpinner));
 		info[3] = String.format("Circles: %d  Sliders: %d  Spinners: %d",
 				beatmap.hitObjectCircle, beatmap.hitObjectSlider, beatmap.hitObjectSpinner);
