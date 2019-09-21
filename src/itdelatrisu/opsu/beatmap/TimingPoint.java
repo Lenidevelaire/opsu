@@ -33,7 +33,7 @@ public class TimingPoint {
 	private float beatLength = 0f;
 
 	/** Slider multiplier. [INHERITED] */
-	private int velocity = 0;
+	private float velocity = 0f;
 
 	/** Beats per measure. */
 	private int meter = 4;
@@ -86,7 +86,7 @@ public class TimingPoint {
 		if (beatLength >= 0)
 			this.beatLength = beatLength;
 		else {
-			this.velocity = (int) beatLength;
+			this.velocity = beatLength;
 			this.inherited = true;
 		}
 	}
@@ -156,7 +156,7 @@ public class TimingPoint {
 	@Override
 	public String toString() {
 		if (inherited)
-			return String.format("%d,%d,%d,%d,%d,%d,%d,%d",
+			return String.format("%d,%g,%d,%d,%d,%d,%d,%d",
 				time, velocity, meter, (int) sampleType,
 				(int) sampleTypeCustom, sampleVolume, 1, (kiai) ? 1: 0);
 		else
