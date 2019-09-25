@@ -118,11 +118,16 @@ public class CurveRenderState {
 		// create curve geometry and store it on the GPU
 		if (vboID == -1) {
 			vboID = GL15.glGenBuffers();
-			createVertexBuffer(vboID);
+			try {
+				createVertexBuffer(vboID);
+			} catch (Throwable e) {
+				discardGeometry();
+			}
 		}
 
 		int drawUpTo = (int) (t * (curve.length - 1));
-		this.renderCurve(color, borderColor, drawUpTo);
+		if (drawUpTo > 0 && vboID != -1)
+			this.renderCurve(color, borderColor, drawUpTo);
 	}
 
 	/**

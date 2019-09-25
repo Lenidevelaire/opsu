@@ -79,6 +79,9 @@ public class LegacyCurveRenderState {
 	/** List holding pairs of 2 numbers in a sequential order, indicating the start and end index of the curve array to render. */
 	protected List<Integer> pointsToRender;
 
+	/** Flag to ignore drawing this curve. */
+	private boolean ignored;
+
 	/**
 	 * Set the width and height of the container that Curves get drawn into.
 	 * Should be called before any curves are drawn.
@@ -115,17 +118,25 @@ public class LegacyCurveRenderState {
 	public LegacyCurveRenderState(HitObject hitObject, Vec2f[] curve) {
 		this.hitObject = hitObject;
 		this.curve = curve;
+		this.ignored = false;
 		initFBO();
 	}
 
 	/** Initializes the FBO. */
 	private void initFBO() {
-		FrameBufferCache cache = FrameBufferCache.getInstance();
-		Rendertarget mapping = cache.get(hitObject);
-		if (mapping == null)
-			mapping = cache.insert(hitObject);
-		fbo = mapping;
-		createVertexBuffer(fbo.getVbo());
+		if (!ignored) {
+			FrameBufferCache cache = FrameBufferCache.getInstance();
+			Rendertarget mapping = cache.get(hitObject);
+			if (mapping == null)
+				mapping = cache.insert(hitObject);
+			fbo = mapping;
+			try {
+				createVertexBuffer(fbo.getVbo());
+			} catch (Throwable e) {
+				discardGeometry();
+				ignored = true;
+			}
+		}
 		// write impossible value to make sure the fbo is cleared
 		lastPointDrawn = -1;
 		spliceFrom = spliceTo = -1;
@@ -173,6 +184,9 @@ public class LegacyCurveRenderState {
 
 		if (fbo == null)
 			initFBO();
+
+		if (ignored)
+			return;
 
 		if (lastPointDrawn != to || firstPointDrawn != from) {
 			int oldFb = GL11.glGetInteger(EXTFramebufferObject.GL_FRAMEBUFFER_BINDING_EXT);
