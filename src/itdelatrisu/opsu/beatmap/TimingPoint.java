@@ -29,11 +29,8 @@ public class TimingPoint {
 	/** Timing point start time/offset (in ms). */
 	private int time = 0;
 
-	/** Time per beat (in ms). [NON-INHERITED] */
-	private float beatLength = 0f;
-
-	/** Slider multiplier. [INHERITED] */
-	private float velocity = 0f;
+	/** Time per beat (in ms) [NON-INHERITED] -OR- slider multiplier [INHERITED]. */
+	private float value = 0f;
 
 	/** Beats per measure. */
 	private int meter = 4;
@@ -48,7 +45,7 @@ public class TimingPoint {
 	private int sampleVolume = 100;
 
 	/** Whether or not this timing point is inherited. */
-	private boolean inherited = false;
+	private int inherited = -1;
 
 	/** Whether or not Kiai Mode is active. */
 	private boolean kiai = false;
@@ -74,21 +71,32 @@ public class TimingPoint {
 			this.sampleType = (byte) Integer.parseInt(tokens[3]);
 			this.sampleTypeCustom = (byte) Integer.parseInt(tokens[4]);
 			this.sampleVolume = Utils.clamp(Integer.parseInt(tokens[5]), 0, 100);
-//			this.inherited = Utils.parseBoolean(tokens[6]);
+			this.inherited = Integer.parseInt(tokens[6]);
 			if (tokens.length > 7)
 				this.kiai = Utils.parseBoolean(tokens[7]);
 		} catch (ArrayIndexOutOfBoundsException e) {
 			Log.debug(String.format("Error parsing timing point: '%s'", line));
 		}
 
-		// tokens[1] is either beatLength (positive) or velocity (negative)
 		float beatLength = Float.parseFloat(tokens[1]);
-		if (beatLength >= 0)
-			this.beatLength = beatLength;
-		else {
-			this.velocity = beatLength;
-			this.inherited = true;
+		switch (inherited) {
+		// Pass through case 0 and 1 if inherited is parsed
+		case 0: // SV
+			if (Float.isNaN(beatLength))
+				beatLength = -100f; // Set to 1x
+			break;
+		case 1: // BPM
+			if (Float.isNaN(beatLength))
+				beatLength = 1000f; // Set to 60bpm
+			break;
+		// Else, parsed length is either BPM (positive) or SV (negative)
+		default:
+			if (beatLength >= 0)
+				this.inherited = 1;
+			else
+				this.inherited = 0;
 		}
+		this.value = beatLength;
 	}
 
 	/**
@@ -101,12 +109,12 @@ public class TimingPoint {
 	 * Returns the beat length. [NON-INHERITED]
 	 * @return the time per beat (in ms)
 	 */
-	public float getBeatLength() { return beatLength; }
+	public float getBeatLength() { return value; }
 
 	/**
 	 * Returns the slider multiplier. [INHERITED]
 	 */
-	public float getSliderMultiplier() { return Utils.clamp(-velocity, 10, 1000) / 100f; }
+	public float getSliderMultiplier() { return Utils.clamp(-value, 10, 1000) / 100f; }
 
 	/**
 	 * Returns the meter.
@@ -145,7 +153,7 @@ public class TimingPoint {
 	 * Returns whether or not this timing point is inherited.
 	 * @return the inherited
 	 */
-	public boolean isInherited() { return inherited; }
+	public boolean isInherited() { return inherited == 0; }
 
 	/**
 	 * Returns whether or not Kiai Time is active.
@@ -155,13 +163,8 @@ public class TimingPoint {
 
 	@Override
 	public String toString() {
-		if (inherited)
-			return String.format("%d,%g,%d,%d,%d,%d,%d,%d",
-				time, velocity, meter, (int) sampleType,
-				(int) sampleTypeCustom, sampleVolume, 1, (kiai) ? 1: 0);
-		else
-			return String.format("%d,%g,%d,%d,%d,%d,%d,%d",
-				time, beatLength, meter, (int) sampleType,
-				(int) sampleTypeCustom, sampleVolume, 0, (kiai) ? 1: 0);
+		return String.format("%d,%g,%d,%d,%d,%d,%d,%d",
+			time, value, meter, (int) sampleType,
+			(int) sampleTypeCustom, sampleVolume, inherited, (kiai) ? 1: 0);
 	}
 }
