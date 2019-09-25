@@ -30,3 +30,11 @@ build/
 
 Thumbs.db
 /target
+
+# JVM Dumps
+jitdump.*
+javacore.*
+Snap.*
+core.*
+*.dmp
+*.phd
