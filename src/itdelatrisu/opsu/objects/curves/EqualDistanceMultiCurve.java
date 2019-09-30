@@ -139,13 +139,13 @@ public abstract class EqualDistanceMultiCurve extends Curve {
 			if (c != null)
 				return c.cpy();
 			else
-				return new Vec2f(-100f, -100f);
+				return new Vec2f(x, y);
 		}
 		else {
 			Vec2f poi = curve[index];
 			Vec2f poi2 = curve[index + 1];
 			if (poi == null || poi2 == null)
-				return new Vec2f(-100f, -100f);
+				return new Vec2f(x, y);
 			float t2 = indexF - index;
 			return new Vec2f(
 				Utils.lerp(poi.x, poi2.x, t2),
