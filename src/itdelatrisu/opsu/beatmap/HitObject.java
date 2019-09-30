@@ -24,6 +24,7 @@ import itdelatrisu.opsu.objects.curves.CircumscribedCircle;
 import itdelatrisu.opsu.objects.curves.Curve;
 import itdelatrisu.opsu.objects.curves.LinearBezier;
 import itdelatrisu.opsu.objects.curves.Vec2f;
+import lc.lenidevelaire.aria.math.curves.NoCurve;
 
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
@@ -417,17 +418,22 @@ public class HitObject {
 	 * @return a new Curve instance
 	 */
 	public Curve getSliderCurve(boolean scaled) {
-		if (sliderType == SLIDER_PERFECT_CURVE && sliderX.length == 2) {
-			Vec2f nora = new Vec2f(sliderX[0] - x, sliderY[0] - y).nor();
-			Vec2f norb = new Vec2f(sliderX[0] - sliderX[1], sliderY[0] - sliderY[1]).nor();
-			if (Math.abs(norb.x * nora.y - norb.y * nora.x) < 0.00001f)
-				return new LinearBezier(this, false, scaled);  // vectors parallel, use linear bezier instead
+		try {
+			if (sliderType == SLIDER_PERFECT_CURVE && sliderX.length == 2) {
+				Vec2f nora = new Vec2f(sliderX[0] - x, sliderY[0] - y).nor();
+				Vec2f norb = new Vec2f(sliderX[0] - sliderX[1], sliderY[0] - sliderY[1]).nor();
+				if (Math.abs(norb.x * nora.y - norb.y * nora.x) < 0.00001f)
+					return new LinearBezier(this, false, scaled);  // vectors parallel, use linear bezier instead
+				else
+					return new CircumscribedCircle(this, scaled);
+			} else if (sliderType == SLIDER_CATMULL)
+				return new CatmullCurve(this, scaled);
 			else
-				return new CircumscribedCircle(this, scaled);
-		} else if (sliderType == SLIDER_CATMULL)
-			return new CatmullCurve(this, scaled);
-		else
-			return new LinearBezier(this, sliderType == SLIDER_LINEAR, scaled);
+				return new LinearBezier(this, sliderType == SLIDER_LINEAR, scaled);
+		} catch (Throwable e) {
+			// Catching throwable to catch OOME/NPE/runtime/negative array size
+			return new NoCurve(this, scaled);
+		}
 	}
 
 	/**
